@@ -1,7 +1,3 @@
-# This script creates a spreadsheet (vocabulary_counts.xlsx) which lists vocabulary words, the correspond book and chapter numbers in which a word appears,
-# the total number of chapters in which a word appears, and whether or not the word appears in a manipulation sentence.
-# All EPUB files should be located in the path specified by epubs_path.
-
 import os
 import xlsxwriter
 
@@ -9,21 +5,27 @@ from bs4 import BeautifulSoup
 
 COLUMN_VOCABULARY = 0
 COLUMN_BOOK = 1
-COLUMN_CHAPTERS = 2
+COLUMN_CHAPTER_COUNT = 2
 COLUMN_TOTAL_CHAPTERS = 3
-COLUMN_INVOLVES_MANIPULATION = 4
+COLUMN_TOTAL_COUNT = 4
+COLUMN_INVOLVES_MANIPULATION = 5
 
 class Vocabulary:
     def __init__(self, text):
         self.text = text
-        self.chapters = []
+        self.chapter_count = {}
         self.total_chapters = 0
+        self.total_count = 0
         self.involves_manipulation = False
 
-    def add_chapter(self, chapter_number):
-        if chapter_number not in self.chapters:
-            self.chapters.append(chapter_number)
+    def update_chapter_count(self, chapter_number):
+        if chapter_number not in self.chapter_count:
+            self.chapter_count[chapter_number] = 1
             self.total_chapters += 1
+        else:
+            self.chapter_count[chapter_number] += 1
+
+        self.total_count += 1
 
 def setup_workbook(workbook, worksheet):
     # Add a bold format
@@ -34,8 +36,9 @@ def setup_workbook(workbook, worksheet):
     # Write labels
     worksheet.write(row, COLUMN_VOCABULARY, "Vocabulary", bold)
     worksheet.write(row, COLUMN_BOOK, "Book", bold)
-    worksheet.write(row, COLUMN_CHAPTERS, "Chapters", bold)
+    worksheet.write(row, COLUMN_CHAPTER_COUNT, "Chapter (Count)", bold)
     worksheet.write(row, COLUMN_TOTAL_CHAPTERS, "Total Chapters", bold)
+    worksheet.write(row, COLUMN_TOTAL_COUNT, "Total Count", bold)
     worksheet.write(row, COLUMN_INVOLVES_MANIPULATION, "Involves Manipulation", bold)
 
     return (workbook, worksheet)
@@ -108,7 +111,7 @@ def main():
                                     else:
                                         vocabulary = book_vocabulary[text]
                                     
-                                    vocabulary.add_chapter(chapter_number)
+                                    vocabulary.update_chapter_count(chapter_number)
                                     
                                     # Check if vocabulary is part of an action sentence
                                     action_sentence = audible_word.find_parents(attrs = {"class": "actionSentence"})
@@ -121,8 +124,9 @@ def main():
             for vocabulary in book_vocabulary.values():
                 worksheet.write(row, COLUMN_VOCABULARY, vocabulary.text)
                 worksheet.write(row, COLUMN_BOOK, book_title)
-                worksheet.write(row, COLUMN_CHAPTERS, ", ".join(vocabulary.chapters))
+                worksheet.write(row, COLUMN_CHAPTER_COUNT, ", ".join(["CH%s (%s)" % (chapter, count) for (chapter, count) in vocabulary.chapter_count.items()]))
                 worksheet.write(row, COLUMN_TOTAL_CHAPTERS, vocabulary.total_chapters)
+                worksheet.write(row, COLUMN_TOTAL_COUNT, vocabulary.total_count)
                 worksheet.write(row, COLUMN_INVOLVES_MANIPULATION, vocabulary.involves_manipulation)
 
                 row += 1
