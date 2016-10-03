@@ -124,7 +124,7 @@ def main():
             for vocabulary in book_vocabulary.values():
                 worksheet.write(row, COLUMN_VOCABULARY, vocabulary.text)
                 worksheet.write(row, COLUMN_BOOK, book_title)
-                worksheet.write(row, COLUMN_CHAPTER_COUNT, ", ".join(["CH%s (%s)" % (chapter, count) for (chapter, count) in vocabulary.chapter_count.items()]))
+                worksheet.write(row, COLUMN_CHAPTER_COUNT, ", ".join(["CH%s (%s)" % (chapter, count) for (chapter, count) in sorted(vocabulary.chapter_count.items())]))
                 worksheet.write(row, COLUMN_TOTAL_CHAPTERS, vocabulary.total_chapters)
                 worksheet.write(row, COLUMN_TOTAL_COUNT, vocabulary.total_count)
                 worksheet.write(row, COLUMN_INVOLVES_MANIPULATION, vocabulary.involves_manipulation)
